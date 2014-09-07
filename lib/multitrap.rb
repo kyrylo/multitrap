@@ -39,7 +39,9 @@ module Multitrap
       @traps[sig].push(prc || block)
 
       @old_trap.call(sig) do
-        @traps[sig].each(&:call)
+        @traps[sig].each do |signal|
+          signal.call(Signal.list[sig])
+        end
       end
 
       @traps

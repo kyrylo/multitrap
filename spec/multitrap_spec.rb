@@ -59,6 +59,16 @@ describe Multitrap::Trap do
       expect(shared_info).to eq([100, 101, 102])
     end
 
+    it "yields signal's number" do
+      number = nil
+
+      trap('INT') { |signo| number = signo }
+
+      Process.kill('INT', $$)
+
+      expect(number).to eq(2)
+    end
+
     it "raises ArgumentError if signal doesn't exist" do
       expect{
         trap('DONUTS') { }
