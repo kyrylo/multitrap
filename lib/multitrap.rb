@@ -39,11 +39,7 @@ module Multitrap
       @traps[sig].push(prc || block)
 
       @old_trap.call(sig) do
-        begin
-          @traps[sig].each(&:call)
-        rescue SignalException => e
-          binding.pry
-        end
+        @traps[sig].each(&:call)
       end
 
       @traps
