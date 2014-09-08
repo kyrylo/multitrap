@@ -94,5 +94,5 @@ Or install it yourself as:
 ### Known bugs
 
 * recursive traps are broken (fixable)
-* overwrites traps defined before the loading of the library (not fixable,
-  requires patching MRI)
+* overwrites traps defined before the loading of the library ([not fixable,
+  requires patching MRI](https://bugs.ruby-lang.org/issues/10211))
