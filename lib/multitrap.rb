@@ -1,4 +1,5 @@
 require 'multitrap/version'
+require 'thread'
 
 module Multitrap
   class Trap
@@ -18,6 +19,15 @@ module Multitrap
     def initialize(old_trap)
       @old_trap = old_trap
       @traps = {}
+      @mutex = Mutex.new
+    end
+
+    def recursion?
+      frame = caller.find do |f|
+        f =~ %r{multitrap/lib/multitrap\.rb.+`block in add_trap'}
+      end
+
+      true if frame
     end
 
     def add_trap(sig, prc, &block)
@@ -36,7 +46,14 @@ module Multitrap
       end
 
       @traps[sig] ||= []
-      @traps[sig].push(prc || block)
+
+      @mutex.synchronize do
+        if recursion?
+          @traps[sig].pop
+        else
+          @traps[sig].push(prc || block)
+        end
+      end
 
       @old_trap.call(sig) do
         @traps[sig].each do |trap_handler|

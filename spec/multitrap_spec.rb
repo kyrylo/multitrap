@@ -2,6 +2,24 @@ require 'spec_helper'
 
 describe Multitrap::Trap do
   describe "#trap" do
+    describe "recursive" do
+      it "unwinds the stack" do
+        number = nil
+
+        trap('INT') do
+          trap('INT') do
+            number = 42
+          end
+        end
+
+        Process.kill('INT', $$)
+        expect(number).to be_nil
+
+        Process.kill('INT', $$)
+        expect(number).to eq(42)
+      end
+    end
+
     it "adds multiple callbacks" do
       shared = []
 
