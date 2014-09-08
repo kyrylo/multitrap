@@ -22,8 +22,8 @@ Process.kill('INT', $$)
 
 Currently, the library doesn't achieve the goal. I want to make the gem
 unobtrusive: the user installs it and it "just works". However, it's not
-possible due to a limitation of MRI. If you earlier have defined traps and then
-require Multitrap, it discards your callback previous older callback.
+possible due to a limitation of MRI. If you earlier had defined traps and then
+required Multitrap, it would discard your previously defined callbacks.
 
 ```ruby
 trap('INT') do
