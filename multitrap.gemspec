@@ -8,8 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = Multitrap::VERSION
   spec.authors       = ["Kyrylo Silin"]
   spec.email         = ["silin@kyrylo.org"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{Allows Signal.trap to have multiple callbacks}
   spec.homepage      = ""
   spec.license       = "MIT"
 
