@@ -47,8 +47,16 @@ Process.kill('INT', $$)
 # 333
 ```
 
-However, it's possible to bypass this limitation. Just redefine your trap
-when Multitrap is loaded.
+However, it's possible to bypass this limitation. There are two ways. The first
+one is to set RUBYOPT to `-r multitrap`. This guarantees that Multitrap is
+loaded before everything.
+
+```ruby
+RUBYOPT="-r multitrap" rspec spec/foo_spec.rb
+```
+
+The second one is less preferrable. You can redefine your trap when Multitrap is
+loaded.
 
 ```ruby
 trap_proc = trap('INT') do
