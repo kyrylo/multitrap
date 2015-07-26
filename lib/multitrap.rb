@@ -1,5 +1,8 @@
-require 'multitrap/version'
 require 'thread'
+
+require 'multitrap/core_ext/signal'
+require 'multitrap/core_ext/kernel'
+
 
 module Multitrap
   class Trap
@@ -64,22 +67,4 @@ module Multitrap
       @traps
     end
   end
-end
-
-module Signal
-  class << self
-    alias_method :old_trap, :trap
-    protected :old_trap
-
-    def trap(sig, prc = nil, &block)
-      Multitrap::Trap.trap(sig, prc, method(:old_trap), &block)
-    end
-  end
-end
-
-module Kernel
-  def trap(sig, prc = nil, &block)
-    Signal.trap(sig, prc, &block)
-  end
-  module_function :trap
 end
