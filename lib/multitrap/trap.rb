@@ -8,9 +8,9 @@ module Multitrap
       'VTALRM' => 26
     }
 
-    def self.trap(sig, prc, old_trap, &block)
+    def self.trap(signal, command, old_trap, &block)
       @multitrap ||= self.new(old_trap)
-      @multitrap.add_trap(sig, prc, &block)
+      @multitrap.add_trap(signal, command, &block)
     end
 
     def initialize(old_trap)
@@ -27,34 +27,34 @@ module Multitrap
       true if frame
     end
 
-    def add_trap(sig, prc, &block)
-      if RESERVED_SIGNALS.key?(sig)
-        raise ArgumentError, "can't trap reserved signal SIG#{sig}"
+    def add_trap(signal, command, &block)
+      if RESERVED_SIGNALS.key?(signal)
+        raise ArgumentError, "can't trap reserved signal SIG#{signal}"
       end
 
-      unless Signal.list.key?(sig)
-        raise ArgumentError, "unsupported signal SIG#{sig}"
+      unless Signal.list.key?(signal)
+        raise ArgumentError, "unsupported signal SIG#{signal}"
       end
 
-      prc ||= block
+      command ||= block
 
-      if prc.nil?
+      if command.nil?
         raise ArgumentError, "tried to create Proc object without a block"
       end
 
-      @traps[sig] ||= []
+      @traps[signal] ||= []
 
       @mutex.synchronize do
         if recursion?
-          @traps[sig].pop
+          @traps[signal].pop
         else
-          @traps[sig].push(prc || block)
+          @traps[signal].push(command || block)
         end
       end
 
-      @old_trap.call(sig) do
-        @traps[sig].each do |trap_handler|
-          trap_handler.call(Signal.list[sig])
+      @old_trap.call(signal) do
+        @traps[signal].each do |trap_handler|
+          trap_handler.call(Signal.list[signal])
         end
       end
 
