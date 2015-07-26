@@ -1,6 +1,6 @@
 module Kernel
-  def trap(sig, prc = nil, &block)
-    Signal.trap(sig, prc, &block)
+  def trap(signal, command = nil, &block)
+    Signal.trap(signal, command, &block)
   end
   module_function :trap
 end
