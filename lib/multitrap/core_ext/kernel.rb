@@ -1,6 +1,5 @@
 module Kernel
-  def trap(signal, command = nil, &block)
-    Signal.trap(signal, command, &block)
+  [self, singleton_class].each do |klass|
+    klass.include Object::Multitrap::PatchedTrap
   end
-  module_function :trap
 end
