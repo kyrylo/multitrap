@@ -1,24 +1,23 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'multitrap/version'
+Gem::Specification.new do |s|
+  s.name         = 'multitrap'
+  s.version      = File.read('VERSION')
+  s.date         = Time.now.strftime('%Y-%m-%d')
+  s.summary      = %q{Allows Signal.trap to have multiple callbacks}
+  s.author       = 'Kyrylo Silin'
+  s.email        = 'silin@kyrylo.org'
+  s.homepage     = 'https://github.com/kyrylo/multitrap'
+  s.licenses     = 'Zlib'
 
-Gem::Specification.new do |spec|
-  spec.name          = "multitrap"
-  spec.version       = Multitrap::VERSION
-  spec.authors       = ["Kyrylo Silin"]
-  spec.email         = ["silin@kyrylo.org"]
-  spec.summary       = %q{Allows Signal.trap to have multiple callbacks}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  s.require_path = 'lib'
+  s.files        = %w[
+    lib/multitrap/core_ext/signal
+    lib/multitrap/core_ext/kernel
+    lib/multitrap/trap
+  ]
+  s.test_files   = spec.files.grep(%r{^(test|spec|features)/})
 
-  spec.files         = `git ls-files -z`.split("\x0")
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
-  spec.require_paths = ["lib"]
-
-  spec.add_development_dependency "bundler", "~> 1.6"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec"
-  spec.add_development_dependency "pry"
+  s.add_development_dependency 'bundler', '~> 1.9'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'pry'
 end
