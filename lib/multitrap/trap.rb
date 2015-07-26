@@ -1,10 +1,10 @@
 module Multitrap
   class Trap
     RESERVED_SIGNALS = {
-      'BUS' => 10,
-      'SEGV' => 11,
-      'ILL' => 4,
-      'FPE' => 8,
+      'BUS'    => 10,
+      'SEGV'   => 11,
+      'ILL'    => 4,
+      'FPE'    => 8,
       'VTALRM' => 26
     }
 
