@@ -4,58 +4,79 @@ describe Multitrap::Trap do
   describe "#trap" do
     describe "recursive" do
       it "unwinds the stack" do
-        number = nil
+        a = nil
 
-        trap(:INT) do
-          trap(:INT) do
-            number = 42
-          end
+        trap(:USR1) do
+          trap(:USR1) { a = 42 }
         end
 
-        Process.kill(:INT, $$)
-        expect(number).to be_nil
+        Process.kill(:USR1, $$)
+        expect(a).to be_nil
 
-        Process.kill(:INT, $$)
-        expect(number).to eq(42)
+        Process.kill(:USR1, $$)
+        expect(a).to eq(42)
+      end
+    end
+
+    describe "the command parameter" do
+      it "allows accepting only Procs" do
+        # The original method accepts any object.
+        expect { trap(:USR1, Object.new) }.
+          to raise_error(ArgumentError, /tried to create Proc object without a block/)
       end
     end
 
     it "adds multiple callbacks" do
-      shared = []
+      b = []
 
       3.times do |i|
-        trap('INT') { shared << i }
+        trap('USR1') { b << i }
       end
 
-      Process.kill('INT', $$)
+      Process.kill('USR1', $$)
 
-      expect(shared).to eq([0, 1, 2])
+      expect(b).to eq([0, 1, 2])
     end
 
-    it "supports proc syntax" do
-      shared = []
+    it "maintains previously defined callbacks" do
+      # RSpec has its own :INT handler and we should make sure it's not lost.
+      c = nil
+
+      prev_callback = trap('INT') { c = 123 }
+
+      expect(prev_callback['INT'].size).to eq(2)
+      expect(prev_callback['INT'].first.to_s).to match(%r{lib/rspec/core/runner.rb})
+    end
+
+    it "returns a trap list" do
+      # By default Ruby returns previously defined callback.
+      expect(trap(:USR1, proc{})).to be_a Hash
+    end
+
+    it "supports the proc syntax" do
+      d = []
 
       3.times do |i|
-        trap('INT', proc { shared << i })
+        trap(:USR1, proc { d << i })
       end
 
-      Process.kill('INT', $$)
+      Process.kill(:USR1, $$)
 
-      expect(shared).to eq([0, 1, 2])
+      expect(d).to eq([0, 1, 2])
     end
 
     it "ignores block if proc is given" do
-      shared = []
+      e = []
 
       3.times do |i|
-        trap(:INT, proc { shared << i }) do
-          shared << i+100
+        trap(:USR1, proc { e << i }) do
+          e << i+100
         end
       end
 
-      Process.kill(:INT, $$)
+      Process.kill(:USR1, $$)
 
-      expect(shared).to eq([0, 1, 2])
+      expect(e).to eq([0, 1, 2])
     end
 
     it "binds to multiple signals" do
@@ -63,28 +84,28 @@ describe Multitrap::Trap do
       shared_info = []
 
       3.times do |i|
-        trap(:INT) { shared_int << i }
+        trap(:USR1) { shared_int << i }
       end
 
       3.times do |i|
-        trap(:WINCH) { shared_info << i+100 }
+        trap(:USR2) { shared_info << i+100 }
       end
 
-      Process.kill(:INT, $$)
-      Process.kill(:WINCH, $$)
+      Process.kill(:USR1, $$)
+      Process.kill(:USR2, $$)
 
       expect(shared_int).to eq([0, 1, 2])
       expect(shared_info).to eq([100, 101, 102])
     end
 
     it "yields signal's number" do
-      number = nil
+      f = nil
 
-      trap(:INT) { |signo| number = signo }
+      trap(:USR1) { |signo| f = signo }
 
-      Process.kill(:INT, $$)
+      Process.kill(:USR1, $$)
 
-      expect(number).to eq(2)
+      expect(f).to eq(10)
     end
 
     it "raises error if signal doesn't exist" do
@@ -103,7 +124,7 @@ describe Multitrap::Trap do
     end
 
     it "raises error if invoked without block" do
-      expect { trap(:INT) }.
+      expect { trap(:USR1) }.
         to raise_error(ArgumentError, /tried to create Proc object without a block/)
     end
   end

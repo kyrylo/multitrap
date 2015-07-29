@@ -23,10 +23,14 @@ module Multitrap
       @trap_list[signal].pop if recursion?
       @trap_list[signal] << command
 
-      @original_trap.call(signal) do |signo|
+      prev_trap_handler = @original_trap.call(signal) do |signo|
         @trap_list[signal].each do |trap_handler|
           trap_handler.call(signo)
         end
+      end
+
+      if @trap_list[signal].size == 1 && prev_trap_handler != 'DEFAULT'
+        @trap_list[signal].unshift(prev_trap_handler)
       end
 
       @trap_list
