@@ -6,16 +6,16 @@ describe Multitrap::Trap do
       it "unwinds the stack" do
         number = nil
 
-        trap('INT') do
-          trap('INT') do
+        trap(:INT) do
+          trap(:INT) do
             number = 42
           end
         end
 
-        Process.kill('INT', $$)
+        Process.kill(:INT, $$)
         expect(number).to be_nil
 
-        Process.kill('INT', $$)
+        Process.kill(:INT, $$)
         expect(number).to eq(42)
       end
     end
@@ -48,12 +48,12 @@ describe Multitrap::Trap do
       shared = []
 
       3.times do |i|
-        trap('INT', proc { shared << i }) do
+        trap(:INT, proc { shared << i }) do
           shared << i+100
         end
       end
 
-      Process.kill('INT', $$)
+      Process.kill(:INT, $$)
 
       expect(shared).to eq([0, 1, 2])
     end
@@ -63,15 +63,15 @@ describe Multitrap::Trap do
       shared_info = []
 
       3.times do |i|
-        trap('INT') { shared_int << i }
+        trap(:INT) { shared_int << i }
       end
 
       3.times do |i|
-        trap('INFO') { shared_info << i+100 }
+        trap(:WINCH) { shared_info << i+100 }
       end
 
-      Process.kill('INT', $$)
-      Process.kill('INFO', $$)
+      Process.kill(:INT, $$)
+      Process.kill(:WINCH, $$)
 
       expect(shared_int).to eq([0, 1, 2])
       expect(shared_info).to eq([100, 101, 102])
@@ -80,23 +80,32 @@ describe Multitrap::Trap do
     it "yields signal's number" do
       number = nil
 
-      trap('INT') { |signo| number = signo }
+      trap(:INT) { |signo| number = signo }
 
-      Process.kill('INT', $$)
+      Process.kill(:INT, $$)
 
       expect(number).to eq(2)
     end
 
-    it "raises ArgumentError if signal doesn't exist" do
-      expect{
-        trap('DONUTS') { }
-      }.to raise_error(ArgumentError, /unsupported signal SIGDONUTS/)
+    it "raises error if signal doesn't exist" do
+      expect { trap(:DONUTS) {} }.
+        to raise_error(ArgumentError, /unsupported signal SIGDONUTS/)
     end
 
-    it "raises ArgumentError if signal is reserved" do
-      expect{
-        trap('ILL') {}
-      }.to raise_error(ArgumentError, /can't trap reserved signal SIGILL/)
+    it "raises error if signal is reserved" do
+      expect { trap(:ILL) {} }.
+        to raise_error(ArgumentError, /can't trap reserved signal: SIGILL/)
+    end
+
+    it "raises error if invoked without arguments" do
+      expect { trap }.
+        to raise_error(ArgumentError, /wrong number of arguments \(0 for 1..2\)/)
+    end
+
+    it "raises error if invoked without block" do
+      binding.pry
+      expect { trap(:INT) }.
+        to raise_error(ArgumentError, /tried to create Proc object without a block/)
     end
   end
 end

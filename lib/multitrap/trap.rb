@@ -1,64 +1,41 @@
 module Multitrap
   class Trap
-    RESERVED_SIGNALS = {
-      'BUS'    => 10,
-      'SEGV'   => 11,
-      'ILL'    => 4,
-      'FPE'    => 8,
-      'VTALRM' => 26
-    }
+    OWN_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
 
-    def self.trap(signal, command, old_trap, &block)
-      @multitrap ||= self.new(old_trap)
-      @multitrap.add_trap(signal, command, &block)
+    def self.trap(original_trap, *args, &block)
+      @@multitrap ||= new(original_trap)
+
+      signal = args[0]
+      command = args[1]
+
+      @@multitrap.store_trap(signal, command, &block)
     end
 
-    def initialize(old_trap)
-      @old_trap = old_trap
-      @traps = {}
-      @mutex = Mutex.new
+    def initialize(original_trap)
+      @original_trap = original_trap
+      @trap_list = Hash.new { |h, k| h[k] = [] }
     end
 
-    def recursion?
-      frame = caller.find do |f|
-        f =~ %r{multitrap/lib/multitrap\.rb.+`block in add_trap'}
-      end
-
-      true if frame
-    end
-
-    def add_trap(signal, command, &block)
-      if RESERVED_SIGNALS.key?(signal)
-        raise ArgumentError, "can't trap reserved signal SIG#{signal}"
-      end
-
-      unless Signal.list.key?(signal)
-        raise ArgumentError, "unsupported signal SIG#{signal}"
-      end
-
+    def store_trap(signal, command, &block)
+      signal = signal.to_s
       command ||= block
 
-      if command.nil?
-        raise ArgumentError, "tried to create Proc object without a block"
-      end
+      @trap_list[signal].pop if recursion?
+      @trap_list[signal] << command
 
-      @traps[signal] ||= []
-
-      @mutex.synchronize do
-        if recursion?
-          @traps[signal].pop
-        else
-          @traps[signal].push(command || block)
+      @original_trap.call(signal) do |signo|
+        @trap_list[signal].each do |trap_handler|
+          trap_handler.call(signo)
         end
       end
 
-      @old_trap.call(signal) do
-        @traps[signal].each do |trap_handler|
-          trap_handler.call(Signal.list[signal])
-        end
-      end
+      @trap_list
+    end
 
-      @traps
+    private
+
+    def recursion?
+      caller.any? { |stackframe| stackframe =~ OWN_FRAME }
     end
   end
 end
