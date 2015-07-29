@@ -10,11 +10,13 @@ Gem::Specification.new do |s|
 
   s.require_path = 'lib'
   s.files        = %w[
-    lib/multitrap/core_ext/signal
-    lib/multitrap/core_ext/kernel
-    lib/multitrap/trap
+    lib/multitrap/core_ext/signal.rb
+    lib/multitrap/core_ext/kernel.rb
+    lib/multitrap/patched_trap.rb
+    lib/multitrap/trap.rb
+    lib/multitrap.rb
   ]
-  s.test_files   = spec.files.grep(%r{^(test|spec|features)/})
+  s.test_files   = s.files.grep(%r{^(test|spec|features)/})
 
   s.add_development_dependency 'bundler', '~> 1.9'
   s.add_development_dependency 'rake'
