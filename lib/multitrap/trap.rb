@@ -2,9 +2,14 @@ module Multitrap
   class Trap
     OWN_MRI_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
 
-    OWN_RBX_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
+    OWN_RBX_FRAME = %r{
+      /lib/multitrap/patched_trap.rb:.+:in `included'
+      kernel/common/kernel.rb:.+:in `trap'
+      kernel/common/method.rb:.+:in `call'
+      /lib/multitrap/trap.rb:.+:in `store_trap'
+    }xm
 
-    OWN_JRUBY_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
+   # OWN_JRUBY_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
 
     def self.trap(original_trap, *args, &block)
       @@multitrap ||= new(original_trap)
@@ -44,8 +49,8 @@ module Multitrap
 
     def recursion?
       caller.any? do |stackframe|
-        [OWN_MRI_FRAME, OWN_RBX_FRAME, OWN_JRUBY_FRAME].any? do |template|
-          stackframe.match(template)
+        [OWN_MRI_FRAME, OWN_RBX_FRAME].find do |template|
+          stackframe =~ template
         end
       end
     end
