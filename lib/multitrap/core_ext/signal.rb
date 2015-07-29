@@ -1,3 +1,3 @@
 module Signal
-  singleton_class.include Multitrap::PatchedTrap
+  singleton_class.__send__(:include, Multitrap::PatchedTrap)
 end
