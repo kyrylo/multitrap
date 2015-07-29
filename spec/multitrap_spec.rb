@@ -103,7 +103,6 @@ describe Multitrap::Trap do
     end
 
     it "raises error if invoked without block" do
-      binding.pry
       expect { trap(:INT) }.
         to raise_error(ArgumentError, /tried to create Proc object without a block/)
     end
