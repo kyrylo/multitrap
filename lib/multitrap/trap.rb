@@ -4,15 +4,9 @@ module Multitrap
 
     OWN_RBX_FRAME = %r{/lib/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
 
-    RESERVED_SIGNALS = {
-      'BUS' => 10,
-      'SEGV' => 11,
-      'ILL' => 4,
-      'FPE' => 8,
-      'VTALRM' => 26
-    }
+    RESERVED_SIGNALS = %w|BUS SEGV ILL FPE VTALRM|
 
-    KNOWN_SIGNALS = Signal.list.keys - RESERVED_SIGNALS.keys
+    KNOWN_SIGNALS = Signal.list.keys - RESERVED_SIGNALS
 
     def self.trap(original_trap, *args, &block)
       @@multitrap ||= new(original_trap)
