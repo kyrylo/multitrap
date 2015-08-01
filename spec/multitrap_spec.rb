@@ -2,19 +2,37 @@ require 'spec_helper'
 
 describe Multitrap::Trap do
   describe "#trap" do
+    after do
+      Multitrap::Trap.__clear_all_handlers!
+    end
+
     describe "recursive" do
       it "unwinds the stack" do
         a = nil
 
         trap(:USR1) do
-          trap(:USR1) { a = 42 }
+          a = 1
+          trap(:USR1) do
+            a = 2
+            trap(:USR1) do
+              a = 3
+            end
+          end
         end
 
-        Process.kill(:USR1, $$)
         expect(a).to be_nil
 
         Process.kill(:USR1, $$)
-        expect(a).to eq(42)
+        expect(a).to eq(1)
+
+        Process.kill(:USR1, $$)
+        expect(a).to eq(2)
+
+        Process.kill(:USR1, $$)
+        expect(a).to eq(3)
+
+        Process.kill(:USR1, $$)
+        expect(a).to eq(3)
       end
     end
 
