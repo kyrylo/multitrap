@@ -31,7 +31,7 @@ describe Multitrap::Trap do
         expect(a).to be_nil
 
         Process.kill(SIGNAL, $$)
-        sleep 1 if Multitrap.jruby?
+        sleep 2 unless Multitrap.mri?
         wait_for(a).to eq(1)
 
         # JRuby doesn't support nested traps and call only the first one. The
@@ -40,6 +40,7 @@ describe Multitrap::Trap do
           wait_for(a).to eq(1)
 
           Process.kill(SIGNAL, $$)
+          sleep 1 if Multitrap.jruby? || Multitrap.rbx?
           wait_for(a).to eq(2)
 
           Process.kill(SIGNAL, $$)
@@ -146,6 +147,7 @@ describe Multitrap::Trap do
         sleep 1
         wait_for(f).to eq(13)
       else
+        sleep 1 if Multitrap.rbx?
         wait_for(f).to eq(10)
       end
     end
@@ -155,25 +157,38 @@ describe Multitrap::Trap do
         expect(trap(:DONUTS) {}).to have_key('DONUTS')
       else
         expect { trap(:DONUTS) {} }.
-          to raise_error(ArgumentError, /unsupported signal SIGDONUTS/)
+          to raise_error(ArgumentError, /signal (?:SIG)?'?DONUTS'?\z/)
       end
     end
 
     it "raises error if signal is reserved" do
-      expect { trap(:ILL) {} }.
-        to raise_error(
-             ArgumentError,
-             Multitrap.jruby? ? /malformed format string - %S/ : /can't trap reserved signal: SIGILL/)
+      msg = case RUBY_ENGINE
+            when 'ruby' then "can't trap reserved signal: SIGILL"
+            when 'jruby' then "malformed format string - %S"
+            end
+
+      if Multitrap.rbx?
+        expect(trap(:ILL) {}).to have_key('ILL')
+      else
+        expect { trap(:ILL) {} }.to raise_error(ArgumentError, msg)
+      end
     end
 
     it "raises error if invoked without arguments" do
       expect { trap }.
-        to raise_error(ArgumentError, /wrong number of arguments \(0 for 1..2\)/)
+        to raise_error(
+             ArgumentError,
+             Multitrap.rbx? ? "method 'trap': given 0, expected 2" : /wrong number of arguments \(0 for 1..2\)/)
     end
 
     it "raises error if invoked without block" do
-      expect { trap(SIGNAL) }.
-        to raise_error(ArgumentError, /tried to create Proc object without a block/)
+      msg = if Multitrap.rbx?
+              # The real trap adds `nil` as a callback and doesn't raise.
+              /Handler must respond to #call \(was NilClass\)/
+            else
+              /tried to create Proc object without a block/
+            end
+      expect { trap(SIGNAL) }.to raise_error(ArgumentError, msg)
     end
   end
 end
