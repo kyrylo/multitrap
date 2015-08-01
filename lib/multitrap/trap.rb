@@ -4,8 +4,6 @@ module Multitrap
 
     OWN_RBX_FRAME = %r{/lib/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
 
-    # OWN_JRUBY_FRAME = %r{.+/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
-
     RESERVED_SIGNALS = {
       'BUS' => 10,
       'SEGV' => 11,
@@ -39,16 +37,25 @@ module Multitrap
       signal = signal.to_s
       command ||= block
 
-      @trap_list[signal].pop if nested_trap?
+      if nested_trap?
+        return if Multitrap.jruby?
+        @trap_list[signal].pop
+      end
       @trap_list[signal] << command
 
       prev_trap_handler = @original_trap.call(signal) do |signo|
         @trap_list[signal].each do |trap_handler|
-          trap_handler.call(signo)
+          trap_handler.call(signo || Signal.list[signal])
         end
       end
 
-      if !nested_trap? && @trap_list[signal].size == 1 && prev_trap_handler != 'DEFAULT' && prev_trap_handler.inspect !~ %r{Proc:.+@kernel/loader\.rb:[0-9]{1,4}}
+      if !nested_trap? &&
+         @trap_list[signal].size == 1 &&
+         prev_trap_handler != 'DEFAULT' &&
+         prev_trap_handler != 'SYSTEM_DEFAULT' &&
+         prev_trap_handler != 'INGORE' &&
+         prev_trap_handler.inspect !~ %r{Proc:.+@kernel/loader\.rb:[0-9]{1,4}} &&
+         prev_trap_handler.inspect !~ %r{Proc:.+@uri:classloader:/jruby/kernel/signal.rb:[0-9]{1,4}}
         @trap_list[signal].unshift(prev_trap_handler)
       end
 
@@ -67,10 +74,8 @@ module Multitrap
 
     define_method(:nested_trap?) do
       case RUBY_ENGINE
-      when 'ruby'
+      when 'ruby', 'jruby'
         caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
-      when 'jruby'
-#        caller.any? { |stackframe| stackframe =~ OWN_JRUBY_FRAME }
       when 'rbx'
         caller.grep(OWN_RBX_FRAME).size > 1
       else
