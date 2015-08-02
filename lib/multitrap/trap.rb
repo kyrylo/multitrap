@@ -76,6 +76,7 @@ module Multitrap
         if caller.any? { |s| s =~ TRAVIS_FRAME }
           caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
         else
+          puts "TRAVIS"
           caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
         end
       else
