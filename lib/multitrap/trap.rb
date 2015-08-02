@@ -73,10 +73,8 @@ module Multitrap
       case RUBY_ENGINE
       when 'ruby'
         caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
-      when 'rbx'
-        caller.grep(OWN_RBX_FRAME).size > 1
-      when 'jruby'
-        caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
+      when 'jruby', 'rbx'
+        caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
       else
         raise NotImplementedError, 'unsupported Ruby engine'
       end
