@@ -188,10 +188,12 @@ describe Multitrap::Trap do
       end
     end
 
-    it "raises error if signal doesn't exist" do
-      if Multitrap.jruby?
+    if Multitrap.jruby?
+      it "defines the callback on unexisting signals" do
         expect(trap(:DONUTS) {}).to have_key('DONUTS')
-      else
+      end
+    else
+      it "raises error if signal doesn't exist" do
         expect { trap(:DONUTS) {} }.
           to raise_error(ArgumentError, /signal (?:SIG)?'?DONUTS'?\z/)
       end
