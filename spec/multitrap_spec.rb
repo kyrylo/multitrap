@@ -129,7 +129,6 @@ describe Multitrap::Trap do
     end
 
     it "returns a trap list" do
-      # By default Ruby returns previously defined callback.
       expect(trap(SIGNAL, proc{})).to be_a Hash
     end
 
@@ -148,9 +147,7 @@ describe Multitrap::Trap do
       e = []
 
       3.times do |i|
-        trap(SIGNAL, proc { e << i }) do
-          e << i+100
-        end
+        trap(SIGNAL, proc { e << i }) { e << i+100 }
       end
 
       Process.kill(SIGNAL, $$)
@@ -182,11 +179,11 @@ describe Multitrap::Trap do
       trap(SIGNAL) { |signo| f = signo }
 
       Process.kill(SIGNAL, $$)
+      sleep_2
+
       if Multitrap.jruby?
-        sleep 1
         wait_for(f).to eq(13)
       else
-        sleep 1 if Multitrap.rbx?
         wait_for(f).to eq(10)
       end
     end
