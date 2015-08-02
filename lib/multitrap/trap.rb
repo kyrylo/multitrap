@@ -31,6 +31,9 @@ module Multitrap
       signal = signal.to_s
       command ||= block
 
+      p nested_trap?
+      puts caller
+
       if nested_trap?
         # JRuby doesn't support nested traps.
         return if Multitrap.jruby?
