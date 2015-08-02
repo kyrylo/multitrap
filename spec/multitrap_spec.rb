@@ -199,15 +199,18 @@ describe Multitrap::Trap do
       end
     end
 
-    it "raises error if signal is reserved" do
-      msg = case RUBY_ENGINE
-            when 'ruby' then "can't trap reserved signal: SIGILL"
-            when 'jruby' then "malformed format string - %S"
-            end
-
-      if Multitrap.rbx?
+    if Multitrap.rbx?
+      it "defines the callback on reserved signals" do
         expect(trap(:ILL) {}).to have_key('ILL')
-      else
+      end
+    else
+      it "raises error if signal is reserved" do
+        msg = case RUBY_ENGINE
+              when 'ruby' then "can't trap reserved signal: SIGILL"
+              # This is a JRuby bug: https://github.com/jruby/jruby/issues/3208
+              when 'jruby' then "malformed format string - %S"
+              end
+
         expect { trap(:ILL) {} }.to raise_error(ArgumentError, msg)
       end
     end
