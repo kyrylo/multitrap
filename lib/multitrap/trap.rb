@@ -4,6 +4,8 @@ module Multitrap
 
     OWN_RBX_FRAME = %r{/lib/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
 
+    TRAVIS_FRAME = %r{lib/jruby\.jar!/jruby/kernel/signal\.rb}
+
     RESERVED_SIGNALS = %w|BUS SEGV ILL FPE VTALRM|
 
     KNOWN_SIGNALS = Signal.list.keys - RESERVED_SIGNALS
@@ -30,11 +32,6 @@ module Multitrap
     def store_trap(signal, command, &block)
       signal = signal.to_s
       command ||= block
-
-      p nested_trap?
-      p RUBY_ENGINE
-      p caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
-      puts caller
 
       if nested_trap?
         # JRuby doesn't support nested traps.
@@ -73,8 +70,14 @@ module Multitrap
       case RUBY_ENGINE
       when 'ruby'
         caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
-      when 'jruby', 'rbx'
+      when 'rbx'
         caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
+      when 'jruby'
+        if caller.any? { |s| s =~ TRAVIS_FRAME }
+          caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
+        else
+          caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
+        end
       else
         raise NotImplementedError, 'unsupported Ruby engine'
       end
