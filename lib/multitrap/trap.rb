@@ -31,6 +31,9 @@ module Multitrap
       signal = signal.to_s
       command ||= block
 
+      p nested_trap?
+      puts caller
+
       if nested_trap?
         # JRuby doesn't support nested traps.
         return if Multitrap.jruby?
@@ -71,7 +74,7 @@ module Multitrap
       when 'rbx'
         caller.grep(OWN_RBX_FRAME).size > 1
       when 'jruby'
-        caller.grep(OWN_MRI_FRAME).size > 1
+        caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
       else
         raise NotImplementedError, 'unsupported Ruby engine'
       end
