@@ -22,5 +22,4 @@ end
 
 require 'multitrap/trap'
 require 'multitrap/patched_trap'
-require 'multitrap/core_ext/signal'
-require 'multitrap/core_ext/kernel'
+require 'multitrap/core_ext'

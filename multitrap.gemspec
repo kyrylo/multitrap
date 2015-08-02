@@ -10,8 +10,7 @@ Gem::Specification.new do |s|
 
   s.require_path = 'lib'
   s.files        = %w[
-    lib/multitrap/core_ext/signal.rb
-    lib/multitrap/core_ext/kernel.rb
+    lib/multitrap/core_ext.rb
     lib/multitrap/patched_trap.rb
     lib/multitrap/trap.rb
     lib/multitrap.rb

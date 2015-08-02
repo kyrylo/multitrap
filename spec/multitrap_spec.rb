@@ -1,67 +1,119 @@
 require 'spec_helper'
 
 if Multitrap.jruby?
-  SIGNAL = :PIPE
-  OTHER_SIGNAL = :TTIN
+  SIGNAL = 'PIPE'
+  OTHER_SIGNAL = 'TTIN'
 else
-  SIGNAL = :USR1
-  OTHER_SIGNAL = :USR2
+  SIGNAL = 'USR1'
+  OTHER_SIGNAL = 'USR2'
+end
+
+def sleep_2
+  sleep 2 unless Multitrap.mri?
 end
 
 describe Multitrap::Trap do
+  shared_examples 'trap syntax' do |method|
+    it "allows setting multiple callbacks" do
+      a = []
+
+      3.times do |i|
+        method.call(SIGNAL) { a << i }
+      end
+
+      Process.kill(SIGNAL, $$)
+      wait_for(a).to eq([0, 1, 2])
+    end
+  end
+
+  describe "the Signal.trap syntax" do
+    include_examples 'trap syntax', Signal.method(:trap)
+  end
+
+  describe "the Kernel.trap syntax" do
+    include_examples 'trap syntax', Kernel.method(:trap)
+  end
+
+  describe "the trap syntax" do
+    include_examples 'trap syntax', method(:trap)
+  end
+
   describe "#trap" do
     after do
       Multitrap::Trap.__clear_all_handlers!
     end
 
-    describe "recursive" do
-      it "unwinds the stack" do
-        a = nil
+    it "unwinds recursive traps" do
+      a = nil
 
+      trap(SIGNAL) do
+        a = 1
         trap(SIGNAL) do
-          a = 1
+          a = 2
           trap(SIGNAL) do
-            a = 2
-            trap(SIGNAL) do
-              a = 3
-            end
+            a = 3
           end
         end
+      end
 
-        expect(a).to be_nil
+      expect(a).to be_nil
 
-        Process.kill(SIGNAL, $$)
-        sleep 2 unless Multitrap.mri?
+      Process.kill(SIGNAL, $$)
+      sleep_2
+      wait_for(a).to eq(1)
+
+      # JRuby doesn't support nested traps and calls only the first trap. The
+      # nested traps are never invoked.
+      unless Multitrap.jruby?
         wait_for(a).to eq(1)
 
-        # JRuby doesn't support nested traps and call only the first one. The
-        # rest is ignored.
-        unless Multitrap.jruby?
-          wait_for(a).to eq(1)
+        Process.kill(SIGNAL, $$)
+        sleep_2
+        wait_for(a).to eq(2)
 
-          Process.kill(SIGNAL, $$)
-          sleep 1 if Multitrap.jruby? || Multitrap.rbx?
-          wait_for(a).to eq(2)
+        Process.kill(SIGNAL, $$)
+        sleep_2
+        wait_for(a).to eq(3)
 
-          Process.kill(SIGNAL, $$)
-          wait_for(a).to eq(3)
-
-          Process.kill(SIGNAL, $$)
-          wait_for(a).to eq(3)
-        end
+        Process.kill(SIGNAL, $$)
+        sleep_2
+        wait_for(a).to eq(3)
       end
     end
 
     describe "the command parameter" do
-      it "allows accepting only Procs" do
-        expecting = expect { trap(SIGNAL, Object.new) }
+      context "is random object" do
+        let(:obj) { Object.new }
 
         if Multitrap.rbx?
-          expecting.
-            to raise_error(ArgumentError, /Handler must respond to #call \(was Object\)/)
+          it "raises error" do
+            expect { trap(SIGNAL, obj) }.
+              to raise_error(ArgumentError, /Handler must respond to #call \(was Object\)/)
+          end
         else
-          expecting.
-            to raise_error(ArgumentError, /tried to create Proc object without a block/)
+          it "sets the callback" do
+            expect(trap(SIGNAL, obj)).to have_key(SIGNAL)
+          end
+        end
+      end
+
+      context "an object, which responds to #call" do
+        after { $a = nil }
+
+        it "sets the callback" do
+          $a = 1
+
+          klass = Class.new do
+            def call(x)
+              $a = 2
+            end
+          end
+
+          trap(SIGNAL, klass.new)
+
+          Process.kill(SIGNAL, $$)
+          sleep_2
+          expect($a).to eq(2)
         end
       end
     end
@@ -175,10 +227,16 @@ describe Multitrap::Trap do
     end
 
     it "raises error if invoked without arguments" do
-      expect { trap }.
-        to raise_error(
-             ArgumentError,
-             Multitrap.rbx? ? "method 'trap': given 0, expected 2" : /wrong number of arguments \(0 for 1..2\)/)
+      msg = case RUBY_ENGINE
+            when 'rbx'
+              "method 'trap': given 0, expected 2"
+            when 'jruby'
+              "wrong number of arguments (0 for 1)"
+            else
+              "wrong number of arguments (0 for 1..2)"
+            end
+
+      expect { trap }.to raise_error(ArgumentError, msg)
     end
 
     it "raises error if invoked without block" do
