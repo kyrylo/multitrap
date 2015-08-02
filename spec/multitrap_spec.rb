@@ -9,7 +9,7 @@ else
 end
 
 def sleep_
-  sleep 2 unless Multitrap.mri?
+  sleep 2
 end
 
 describe Multitrap::Trap do
@@ -201,7 +201,7 @@ describe Multitrap::Trap do
       end
     end
 
-    if Multitrap.rbx?
+    if Multitrap.rbx? || Multitrap.mri? && RUBY_VERSION =~ /\A1\.9\./
       it "defines the callback on reserved signals" do
         expect(trap(:ILL) {}).to have_key('ILL')
       end
