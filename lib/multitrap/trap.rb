@@ -68,10 +68,13 @@ module Multitrap
 
     define_method(:nested_trap?) do
       case RUBY_ENGINE
-      when 'ruby', 'jruby'
+      when 'ruby'
         caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
       when 'rbx'
         caller.grep(OWN_RBX_FRAME).size > 1
+      when 'jruby'
+        # JRuby doesn't support nested traps.
+        false
       else
         raise NotImplementedError, 'unsupported Ruby engine'
       end

@@ -8,7 +8,7 @@ else
   OTHER_SIGNAL = 'USR2'
 end
 
-def sleep_2
+def sleep_
   sleep 2 unless Multitrap.mri?
 end
 
@@ -59,24 +59,22 @@ describe Multitrap::Trap do
       expect(a).to be_nil
 
       Process.kill(SIGNAL, $$)
-      sleep_2
+      sleep_
       wait_for(a).to eq(1)
 
       # JRuby doesn't support nested traps and calls only the first trap. The
       # nested traps are never invoked.
       unless Multitrap.jruby?
-        wait_for(a).to eq(1)
-
         Process.kill(SIGNAL, $$)
-        sleep_2
+        sleep_
         wait_for(a).to eq(2)
 
         Process.kill(SIGNAL, $$)
-        sleep_2
+        sleep_
         wait_for(a).to eq(3)
 
         Process.kill(SIGNAL, $$)
-        sleep_2
+        sleep_
         wait_for(a).to eq(3)
       end
     end
@@ -112,7 +110,7 @@ describe Multitrap::Trap do
           trap(SIGNAL, klass.new)
 
           Process.kill(SIGNAL, $$)
-          sleep_2
+          sleep_
           expect($a).to eq(2)
         end
       end
@@ -179,7 +177,7 @@ describe Multitrap::Trap do
       trap(SIGNAL) { |signo| f = signo }
 
       Process.kill(SIGNAL, $$)
-      sleep_2
+      sleep_
 
       if Multitrap.jruby?
         wait_for(f).to eq(13)
