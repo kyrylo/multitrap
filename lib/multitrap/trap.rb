@@ -1,8 +1,8 @@
 module Multitrap
   class Trap
-    OWN_MRI_FRAME = %r{/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
+    OWN_MRI_FRAME = %r{/lib/multitrap/trap.rb:[0-9]{1,3}:in `block in store_trap'}
 
-    OWN_RBX_FRAME = %r{/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
+    OWN_RBX_FRAME = %r{/lib/multitrap/trap.rb:[0-9]{1,3}:in `store_trap'}
 
     RESERVED_SIGNALS = %w|BUS SEGV ILL FPE VTALRM|
 
