@@ -118,17 +118,6 @@ describe Multitrap::Trap do
       end
     end
 
-    it "adds multiple callbacks" do
-      b = []
-
-      3.times do |i|
-        trap(SIGNAL) { b << i }
-      end
-
-      Process.kill(SIGNAL, $$)
-      wait_for(b).to eq([0, 1, 2])
-    end
-
     unless Multitrap.jruby?
       it "maintains previously defined callbacks" do
         # RSpec has its own :INT handler and we should make sure it's not lost.
