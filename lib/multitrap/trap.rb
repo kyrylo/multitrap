@@ -32,6 +32,8 @@ module Multitrap
       command ||= block
 
       p nested_trap?
+      p RUBY_ENGINE
+      p caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
       puts caller
 
       if nested_trap?
