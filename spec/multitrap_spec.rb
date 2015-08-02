@@ -118,16 +118,14 @@ describe Multitrap::Trap do
       end
     end
 
-    unless Multitrap.jruby?
-      it "maintains previously defined callbacks" do
-        # RSpec has its own :INT handler and we should make sure it's not lost.
-        c = nil
+    it "maintains previously defined callbacks" do
+      # RSpec has its own :INT handler and we should make sure it's not lost.
+      c = nil
 
-        prev_callback = trap('INT') { c = 123 }
+      prev_callback = trap('INT') { c = 123 }
 
-        expect(prev_callback['INT'].size).to eq(2)
-        expect(prev_callback['INT'].first.to_s).to match(%r{lib/rspec/core/runner.rb})
-      end
+      expect(prev_callback['INT'].size).to eq(2)
+      expect(prev_callback['INT'].first.to_s).to match(%r{lib/rspec/core/runner.rb})
     end
 
     it "returns a trap list" do
