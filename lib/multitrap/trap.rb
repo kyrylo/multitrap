@@ -73,6 +73,8 @@ module Multitrap
       when 'rbx'
         caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
       when 'jruby'
+        puts caller
+        puts '--------'
         if caller.any? { |s| s =~ TRAVIS_FRAME }
           caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
         else
