@@ -73,8 +73,7 @@ module Multitrap
       when 'rbx'
         caller.grep(OWN_RBX_FRAME).size > 1
       when 'jruby'
-        # JRuby doesn't support nested traps.
-        false
+        caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
       else
         raise NotImplementedError, 'unsupported Ruby engine'
       end

@@ -64,7 +64,11 @@ describe Multitrap::Trap do
 
       # JRuby doesn't support nested traps and calls only the first trap. The
       # nested traps are never invoked.
-      unless Multitrap.jruby?
+      if Multitrap.jruby?
+        Process.kill(SIGNAL, $$)
+        sleep_
+        wait_for(a).to eq(1)
+      else
         Process.kill(SIGNAL, $$)
         sleep_
         wait_for(a).to eq(2)
