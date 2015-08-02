@@ -32,6 +32,7 @@ module Multitrap
       command ||= block
 
       if nested_trap?
+        # JRuby doesn't support nested traps.
         return if Multitrap.jruby?
         @trap_list[signal].pop
       end
@@ -45,11 +46,8 @@ module Multitrap
 
       if !nested_trap? &&
          @trap_list[signal].size == 1 &&
-         prev_trap_handler != 'DEFAULT' &&
-         prev_trap_handler != 'SYSTEM_DEFAULT' &&
-         prev_trap_handler != 'INGORE' &&
-         prev_trap_handler.inspect !~ %r{Proc:.+@kernel/loader\.rb:[0-9]{1,4}} &&
-         prev_trap_handler.inspect !~ %r{Proc:.+@uri:classloader:/jruby/kernel/signal.rb:[0-9]{1,4}}
+         !default_handler?(prev_trap_handler) &&
+         !default_handler_path?(prev_trap_handler)
         @trap_list[signal].unshift(prev_trap_handler)
       end
 
@@ -81,6 +79,17 @@ module Multitrap
 
     def create_trap_list
       Hash.new { |h, k| h[k] = [] }
+    end
+
+    def default_handler?(prev)
+      ['DEFAULT', 'SYSTEM_DEFAULT', 'IGNORE'].any? { |h| h == prev }
+    end
+
+    def default_handler_path?(prev)
+      [%r{Proc:.+@kernel/loader\.rb:[0-9]{1,4}},
+       %r{Proc:.+@uri:classloader:/jruby/kernel/signal.rb:[0-9]{1,4}}].any? do |h|
+        h =~ prev.to_s
+       end
     end
   end
 end
