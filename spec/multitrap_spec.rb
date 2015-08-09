@@ -121,13 +121,20 @@ describe Multitrap::Trap do
     end
 
     it "maintains previously defined callbacks" do
-      # RSpec has its own :INT handler and we should make sure it's not lost.
       c = nil
 
-      prev_callback = trap('INT') { c = 123 }
+      callbacks = trap('INT') { c = 123 }
 
-      expect(prev_callback['INT'].size).to eq(2)
-      expect(prev_callback['INT'].first.to_s).to match(%r{lib/rspec/core/runner.rb})
+      # RSpec has its own :INT handler and we should make sure it's not lost.
+      rspec_handler = callbacks['INT'].shift
+      expect(callbacks['INT'].size).to eq(1)
+      expect(rspec_handler.to_s).to match(%r{lib/rspec/core/runner.rb})
+
+      Process.kill(:INT, $$)
+      wait_for(c).to eq(123)
+
+      callbacks['INT'].unshift(rspec_handler)
+      expect(callbacks['INT'].size).to eq(2)
     end
 
     it "returns a trap list" do
