@@ -1,7 +1,7 @@
 Multitrap
 =========
 
-[![Build Status](https://travis-ci.org/kyrylo/multitrap.svg?branch=master)](https://travis-ci.org/kyrylo/multitrap)
+[![Build Status](https://travis-ci.org/kyrylo/multitrap.svg?branch=v0.1.0)](https://travis-ci.org/kyrylo/multitrap)
 
 Introduction
 ------------
