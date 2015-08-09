@@ -44,7 +44,7 @@ module Multitrap
       @trap_list[signal] << command
 
       prev_trap_handler = @original_trap.call(signal) do |signo|
-        @trap_list[signal].each do |trap_handler|
+        @trap_list[signal].reverse_each do |trap_handler|
           trap_handler.call(signo || Signal.list[signal])
         end
       end

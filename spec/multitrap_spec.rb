@@ -22,7 +22,7 @@ describe Multitrap::Trap do
       end
 
       Process.kill(SIGNAL, $$)
-      wait_for(a).to eq([0, 1, 2])
+      wait_for(a).to eq([2, 1, 0])
     end
   end
 
@@ -142,7 +142,7 @@ describe Multitrap::Trap do
       end
 
       Process.kill(SIGNAL, $$)
-      wait_for(d).to eq([0, 1, 2])
+      wait_for(d).to eq([2, 1, 0])
     end
 
     it "ignores block if proc is given" do
@@ -153,7 +153,7 @@ describe Multitrap::Trap do
       end
 
       Process.kill(SIGNAL, $$)
-      wait_for(e).to eq([0, 1, 2])
+      wait_for(e).to eq([2, 1, 0])
     end
 
     it "binds to multiple signals" do
@@ -171,8 +171,8 @@ describe Multitrap::Trap do
       Process.kill(SIGNAL, $$)
       Process.kill(OTHER_SIGNAL, $$)
 
-      wait_for(shared_int).to eq([0, 1, 2])
-      wait_for(shared_info).to eq([100, 101, 102])
+      wait_for(shared_int).to eq([2, 1, 0])
+      wait_for(shared_info).to eq([102, 101, 100])
     end
 
     it "yields signal's number" do
