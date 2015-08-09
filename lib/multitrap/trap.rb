@@ -33,11 +33,14 @@ module Multitrap
       signal = signal.to_s
       command ||= block
 
-      if nested_trap?
+      trap_is_nested = nested_trap?
+
+      if trap_is_nested
         # JRuby doesn't support nested traps.
         return if Multitrap.jruby?
         @trap_list[signal].pop
       end
+
       @trap_list[signal] << command
 
       prev_trap_handler = @original_trap.call(signal) do |signo|
@@ -46,7 +49,7 @@ module Multitrap
         end
       end
 
-      if !nested_trap? &&
+      if !trap_is_nested &&
          @trap_list[signal].size == 1 &&
          !default_handler?(prev_trap_handler) &&
          !default_handler_path?(prev_trap_handler)
@@ -71,15 +74,12 @@ module Multitrap
       when 'ruby'
         caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
       when 'rbx'
-        caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
+        caller.grep(OWN_RBX_FRAME).size > 1
       when 'jruby'
-        puts caller
-        puts '--------'
-        if caller.any? { |s| s =~ TRAVIS_FRAME }
-          caller.any? { |stackframe| stackframe =~ OWN_RBX_FRAME }
+        if caller.any? { |stackframe| stackframe =~ TRAVIS_FRAME }
+          caller.grep(OWN_RBX_FRAME).size > 1
         else
-          puts "TRAVIS"
-          caller.any? { |stackframe| stackframe =~ OWN_MRI_FRAME }
+          caller.grep(OWN_MRI_FRAME).size > 1
         end
       else
         raise NotImplementedError, 'unsupported Ruby engine'
