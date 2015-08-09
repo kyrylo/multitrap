@@ -154,4 +154,7 @@ Roadmap
 I'm not sure we need this, but it would be possible to remove inconsistencies
 with respect to nested traps on all Ruby platforms.
 
-Licence
+License
+-------
+
+The project uses the MIT License. See LICENSE.txt file for more information.
