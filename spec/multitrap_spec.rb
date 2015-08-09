@@ -131,6 +131,7 @@ describe Multitrap::Trap do
       expect(rspec_handler.to_s).to match(%r{lib/rspec/core/runner.rb})
 
       Process.kill(:INT, $$)
+      sleep_
       wait_for(c).to eq(123)
 
       callbacks['INT'].unshift(rspec_handler)
