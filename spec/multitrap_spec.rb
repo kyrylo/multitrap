@@ -153,6 +153,17 @@ describe Multitrap::Trap do
       wait_for(d).to eq([2, 1, 0])
     end
 
+    it 'ignores IGNORE trap commands' do
+      e = []
+
+      3.times do |_i|
+        trap(SIGNAL, 'IGNORE')
+      end
+
+      Process.kill(SIGNAL, $$)
+      wait_for(e).to eq([])
+    end
+
     it "ignores block if proc is given" do
       e = []
 
